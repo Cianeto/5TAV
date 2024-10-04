@@ -1,14 +1,3 @@
-import pygame as pg
-import sys
-import os
-from random import randint, choice
-
-WIN_SIZE = 600
-CELL_SIZE = WIN_SIZE // 3
-INF = float('inf')
-vec2 = pg.math.Vector2
-CELL_CENTER = vec2(CELL_SIZE / 2)
-
 class TicTacToe:
     def __init__(self, game):
         self.game = game
@@ -51,11 +40,17 @@ class TicTacToe:
             self.player = 1 - self.player
 
     def draw_winner_message(self):
-        if self.winner is not None:
+        if self.winner is not None and self.winner != 'tie':
             winner_text = f"Player {self.winner + 1} wins!"
             text_surface = self.font.render(winner_text, True, (255, 0, 0))
             text_rect = text_surface.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2))
             self.game.screen.blit(text_surface, text_rect)
+
+    def draw_tie_message(self):
+        tie_text = "It's a tie!"
+        text_surface = self.font.render(tie_text, True, (255, 0, 0))
+        text_rect = text_surface.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2))
+        self.game.screen.blit(text_surface, text_rect)
 
     def draw_winning_line(self):
         if self.winning_line is not None:
@@ -68,13 +63,20 @@ class TicTacToe:
             self.game.screen.blit(self.field_image, (0, 0))
             self.draw_objects()
             self.check_winner()
-            self.draw_winner_message()
+            if self.winner == 'tie':
+                self.draw_tie_message()
+            else:
+                self.draw_winner_message()
             self.draw_winning_line()
             self.check_events()
             if self.player == 1 and self.winner is None:  # Assuming player 1 is the machine
                 self.make_random_move()
             pg.display.update()
             self.game.clock.tick(60)
+            
+            if self.winner is not None:
+                pg.time.wait(2000)  # Wait for 2 seconds before restarting the game
+                self.new_game()
 
     def draw_objects(self):
         for row in range(3):
@@ -89,7 +91,11 @@ class TicTacToe:
             if self.game_array[line[0][0]][line[0][1]] == self.game_array[line[1][0]][line[1][1]] == self.game_array[line[2][0]][line[2][1]] != INF:
                 self.winner = self.game_array[line[0][0]][line[0][1]]
                 self.winning_line = line
-                break
+                return
+        
+        # Verificar se todas as células estão preenchidas
+        if all(cell != INF for row in self.game_array for cell in row):
+            self.winner = 'tie'
 
     def check_events(self):
         for event in pg.event.get():
@@ -128,6 +134,16 @@ class Game:
             pg.display.update()
             self.clock.tick(60)
 
+import pygame as pg
+import sys
+import os
+from random import randint, choice
+
+WIN_SIZE = 600
+CELL_SIZE = WIN_SIZE // 3
+INF = float('inf')
+vec2 = pg.math.Vector2
+CELL_CENTER = vec2(CELL_SIZE / 2)
 
 if __name__ == "__main__":
     game = Game()
