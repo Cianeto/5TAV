@@ -1,6 +1,5 @@
 import pygame as pg
 import sys
-import os
 from random import randint, choice
 
 WIN_SIZE = 600
@@ -55,13 +54,24 @@ class StartScreen:
             pg.display.update()
             self.game.clock.tick(60)
 
+class BotPlayer:
+    def __init__(self, game, bot_type='random'):
+        self.game = game
+        self.bot_type = bot_type
+
+    def random_move(self):
+        empty_cells = [(row, col) for row in range(3) for col in range(3) if self.game.tic_tac_toe.check_empty_cell(row, col)]
+        if empty_cells:
+            row, col = choice(empty_cells)
+            self.game.game_array[row][col] = self.game.player
+            self.game.player = 1 - self.game.player
+
 class TicTacToe:
     def __init__(self, game):
         self.game = game
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.field_image = self.get_scaled_image(path=os.path.join(base_dir, 'resources', 'field.png'), res=[WIN_SIZE] * 2)
-        self.O_image = self.get_scaled_image(path=os.path.join(base_dir, 'resources', 'o.png'), res=[CELL_SIZE] * 2)
-        self.X_image = self.get_scaled_image(path=os.path.join(base_dir, 'resources', 'x.png'), res=[CELL_SIZE] * 2)
+        self.field_image = self.get_scaled_image(path='TicTacToe/resources/field.png', res=[WIN_SIZE] * 2)
+        self.O_image = self.get_scaled_image(path='TicTacToe/resources/o.png', res=[CELL_SIZE] * 2)
+        self.X_image = self.get_scaled_image(path='TicTacToe/resources/x.png', res=[CELL_SIZE] * 2)
 
         self.game_array = [[INF, INF, INF],
                            [INF, INF, INF],
@@ -179,7 +189,7 @@ class TicTacToe:
 
             pg.display.update()
             self.game.clock.tick(60)
-            
+
             if self.winner is not None:
                 pg.time.wait(1000)  # esperar 1 segundo antes de reiniciar o jogo
                 self.new_game()
@@ -189,6 +199,11 @@ class Game:
         pg.init()
         self.screen = pg.display.set_mode((WIN_SIZE, WIN_SIZE))
         self.clock = pg.time.Clock()
+
+        pg.display.set_caption("Tic Tac Toe")
+        icon = pg.image.load('TicTacToe/resources/tic-tac-toe.png')
+        pg.display.set_icon(icon)
+
         self.start_screen = StartScreen(self)
         self.tic_tac_toe = TicTacToe(self)
 
