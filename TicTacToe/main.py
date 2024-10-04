@@ -54,21 +54,93 @@ class StartScreen:
             pg.display.update()
             self.game.clock.tick(60)
 
-""" class BotPlayer:
-    def __init__(self, game, bot_type='random'):
+class BotPlayer:
+    def __init__(self, game, bot_type='perfect'):
         self.game = game
         self.bot_type = bot_type
 
+    def move(self):
+        if self.bot_type == 'random':
+            self.random_move()
+        elif self.bot_type == 'perfect':
+            self.perfect_move()
+
     def random_move(self):
-        empty_cells = [(row, col) for row in range(3) for col in range(3) if self.game.tic_tac_toe.check_empty_cell(row, col)]
+        empty_cells = [(row, col) for row in range(3) for col in range(3) if self.game.check_empty_cell(row, col)]
         if empty_cells:
             row, col = choice(empty_cells)
             self.game.game_array[row][col] = self.game.player
-            self.game.player = 1 - self.game.player """
+            self.game.player = 1 - self.game.player
+
+    def perfect_move(self):
+        best_val = -float('inf')
+        best_move = None
+
+        for row in range(3):
+            for col in range(3):
+                if self.game.check_empty_cell(row, col):
+                    self.game.game_array[row][col] = self.game.player
+                    move_val = self.minimax(0, False)
+                    self.game.game_array[row][col] = float('inf')
+                    if move_val > best_val:
+                        best_move = (row, col)
+                        best_val = move_val
+
+        if best_move:
+            row, col = best_move
+            self.game.game_array[row][col] = self.game.player
+            self.game.player = 1 - self.game.player
+
+    def minimax(self, depth, is_max):
+        score = self.evaluate()
+
+        if score == 10:
+            return score - depth
+        if score == -10:
+            return score + depth
+        if not self.is_moves_left():
+            return 0
+
+        if is_max:
+            best = -float('inf')
+            for row in range(3):
+                for col in range(3):
+                    if self.game.check_empty_cell(row, col):
+                        self.game.game_array[row][col] = self.game.player
+                        best = max(best, self.minimax(depth + 1, not is_max))
+                        self.game.game_array[row][col] = float('inf')
+            return best
+        else:
+            best = float('inf')
+            for row in range(3):
+                for col in range(3):
+                    if self.game.check_empty_cell(row, col):
+                        self.game.game_array[row][col] = 1 - self.game.player
+                        best = min(best, self.minimax(depth + 1, not is_max))
+                        self.game.game_array[row][col] = float('inf')
+            return best
+
+    def evaluate(self):
+        for line in self.game.line_indices_array:
+            if self.game.game_array[line[0][0]][line[0][1]] == self.game.game_array[line[1][0]][line[1][1]] == self.game.game_array[line[2][0]][line[2][1]] != float('inf'):
+                if self.game.game_array[line[0][0]][line[0][1]] == self.game.player:
+                    return 10
+                elif self.game.game_array[line[0][0]][line[0][1]] == 1 - self.game.player:
+                    return -10
+        return 0
+
+    def is_moves_left(self):
+        for row in range(3):
+            for col in range(3):
+                if self.game.check_empty_cell(row, col):
+                    return True
+        return False
+
 
 class TicTacToe:
     def __init__(self, game):
         self.game = game
+        self.bot_player = BotPlayer(self)
         self.field_image = self.get_scaled_image(path='TicTacToe/resources/field.png', res=[WIN_SIZE] * 2)
         self.O_image = self.get_scaled_image(path='TicTacToe/resources/o.png', res=[CELL_SIZE] * 2)
         self.X_image = self.get_scaled_image(path='TicTacToe/resources/x.png', res=[CELL_SIZE] * 2)
@@ -99,13 +171,6 @@ class TicTacToe:
     def check_empty_cell(self, row, col):
         return self.game_array[row][col] == INF
 
-    def make_random_move(self):
-        empty_cells = [(row, col) for row in range(3) for col in range(3) if self.check_empty_cell(row, col)]
-        if empty_cells:
-            row, col = choice(empty_cells)
-            self.game_array[row][col] = self.player
-            self.player = 1 - self.player
-
     def draw_winner_message(self):
         if self.winner is not None and self.winner != 'tie':
             winner_text = f"Player {self.winner + 1} wins!"
@@ -114,7 +179,7 @@ class TicTacToe:
             self.game.screen.blit(text_surface, text_rect)
 
     def draw_tie_message(self):
-        tie_text = "Empate"
+        tie_text = "Draw"
         text_surface = self.font.render(tie_text, True, (255, 0, 0))
         text_rect = text_surface.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2))
         self.game.screen.blit(text_surface, text_rect)
@@ -185,8 +250,9 @@ class TicTacToe:
             self.draw_objects()
             self.check_win()
             if self.player == 1 and self.winner is None:  # Assuming player 1 is the machine
-                self.make_random_move()
+                self.bot_player.move()
                 self.draw_objects()
+                pg.time.wait(1000)
                 self.check_win()
 
             pg.display.update()
