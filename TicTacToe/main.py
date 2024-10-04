@@ -1,3 +1,60 @@
+import pygame as pg
+import sys
+import os
+from random import randint, choice
+
+WIN_SIZE = 600
+CELL_SIZE = WIN_SIZE // 3
+INF = float('inf')
+vec2 = pg.math.Vector2
+CELL_CENTER = vec2(CELL_SIZE / 2)
+
+class StartScreen:
+    def __init__(self, game):
+        self.game = game
+        self.font = pg.font.SysFont('Verdana', 50, True)
+        self.play_button = pg.Rect(WIN_SIZE // 2 - 75, WIN_SIZE // 2, 150, 50)
+        self.button_font = pg.font.SysFont('Verdana', 30, True)
+
+    def draw_background(self):
+        # Draw a gradient background
+        for i in range(WIN_SIZE):
+            color = (i * 255 // WIN_SIZE, 0, 255 - i * 255 // WIN_SIZE)
+            pg.draw.line(self.game.screen, color, (0, i), (WIN_SIZE, i))
+
+    def draw_title(self):
+        title_surface = self.font.render("TIC TAC TOE", True, (255, 255, 255))
+        title_rect = title_surface.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 - 100))
+        self.game.screen.blit(title_surface, title_rect)
+
+    def draw_play_button(self):
+        # Draw button with shadow
+        shadow_offset = 5
+        shadow_color = (50, 50, 50)
+        pg.draw.rect(self.game.screen, shadow_color, self.play_button.move(shadow_offset, shadow_offset))
+        pg.draw.rect(self.game.screen, (255, 255, 255), self.play_button)
+        
+        play_surface = self.button_font.render("Play", True, (0, 0, 0))
+        play_rect = play_surface.get_rect(center=self.play_button.center)
+        self.game.screen.blit(play_surface, play_rect)
+
+    def run(self):
+        while True:
+            self.draw_background()
+            self.draw_title()
+            self.draw_play_button()
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    if self.play_button.collidepoint(event.pos):
+                        return
+
+            pg.display.update()
+            self.game.clock.tick(60)
+
 class TicTacToe:
     def __init__(self, game):
         self.game = game
@@ -12,7 +69,7 @@ class TicTacToe:
         self.player = randint(0, 1)
 
         self.line_indices_array = [[(0, 0), (0, 1), (0, 2)],
-                                   [(1, 0), (1, 1), (1, 2)],
+                                   [(1, 0), (1, 1), (2, 2)],
                                    [(2, 0), (2, 1), (2, 2)],
                                    [(0, 0), (1, 0), (2, 0)],
                                    [(0, 1), (1, 1), (2, 1)],
@@ -75,7 +132,7 @@ class TicTacToe:
             self.game.clock.tick(60)
             
             if self.winner is not None:
-                pg.time.wait(2000)  # Wait for 2 seconds before restarting the game
+                pg.time.wait(1000)  # esperar 1 segundo antes de reiniciar o jogo
                 self.new_game()
 
     def draw_objects(self):
@@ -126,24 +183,18 @@ class Game:
         pg.init()
         self.screen = pg.display.set_mode((WIN_SIZE, WIN_SIZE))
         self.clock = pg.time.Clock()
+        self.start_screen = StartScreen(self)
         self.tic_tac_toe = TicTacToe(self)
 
+    def run_start_screen(self):
+        self.start_screen.run()
+
     def run(self):
+        self.run_start_screen()
         while True:
             self.tic_tac_toe.run()
             pg.display.update()
             self.clock.tick(60)
-
-import pygame as pg
-import sys
-import os
-from random import randint, choice
-
-WIN_SIZE = 600
-CELL_SIZE = WIN_SIZE // 3
-INF = float('inf')
-vec2 = pg.math.Vector2
-CELL_CENTER = vec2(CELL_SIZE / 2)
 
 if __name__ == "__main__":
     game = Game()
