@@ -69,7 +69,7 @@ class TicTacToe:
         self.player = randint(0, 1)
 
         self.line_indices_array = [[(0, 0), (0, 1), (0, 2)],
-                                   [(1, 0), (1, 1), (2, 2)],
+                                   [(1, 0), (1, 1), (1, 2)],
                                    [(2, 0), (2, 1), (2, 2)],
                                    [(0, 0), (1, 0), (2, 0)],
                                    [(0, 1), (1, 1), (2, 1)],
@@ -104,7 +104,7 @@ class TicTacToe:
             self.game.screen.blit(text_surface, text_rect)
 
     def draw_tie_message(self):
-        tie_text = "It's a tie!"
+        tie_text = "Empate"
         text_surface = self.font.render(tie_text, True, (255, 0, 0))
         text_rect = text_surface.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2))
         self.game.screen.blit(text_surface, text_rect)
@@ -115,26 +115,6 @@ class TicTacToe:
             end_pos = vec2(self.winning_line[2][1], self.winning_line[2][0]) * CELL_SIZE + CELL_CENTER
             pg.draw.line(self.game.screen, (255, 0, 0), start_pos, end_pos, 10)
 
-    def run(self):
-        while True:
-            self.game.screen.blit(self.field_image, (0, 0))
-            self.draw_objects()
-            self.check_winner()
-            if self.winner == 'tie':
-                self.draw_tie_message()
-            else:
-                self.draw_winner_message()
-            self.draw_winning_line()
-            self.check_events()
-            if self.player == 1 and self.winner is None:  # Assuming player 1 is the machine
-                self.make_random_move()
-            pg.display.update()
-            self.game.clock.tick(60)
-            
-            if self.winner is not None:
-                pg.time.wait(1000)  # esperar 1 segundo antes de reiniciar o jogo
-                self.new_game()
-
     def draw_objects(self):
         for row in range(3):
             for col in range(3):
@@ -144,15 +124,15 @@ class TicTacToe:
                     self.game.screen.blit(self.X_image, vec2(col, row) * CELL_SIZE)
 
     def check_winner(self):
-        for line in self.line_indices_array:
-            if self.game_array[line[0][0]][line[0][1]] == self.game_array[line[1][0]][line[1][1]] == self.game_array[line[2][0]][line[2][1]] != INF:
-                self.winner = self.game_array[line[0][0]][line[0][1]]
-                self.winning_line = line
-                return
-        
-        # Verificar se todas as células estão preenchidas
-        if all(cell != INF for row in self.game_array for cell in row):
-            self.winner = 'tie'
+        if(self.winner == None):
+            for line in self.line_indices_array:
+                if self.game_array[line[0][0]][line[0][1]] == self.game_array[line[1][0]][line[1][1]] == self.game_array[line[2][0]][line[2][1]] != INF:
+                    self.winner = self.game_array[line[0][0]][line[0][1]]
+                    self.winning_line = line
+                    return
+            # Verificar se todas as células estão preenchidas
+            if all(cell != INF for row in self.game_array for cell in row):
+                self.winner = 'tie'
 
     def check_events(self):
         for event in pg.event.get():
@@ -178,6 +158,32 @@ class TicTacToe:
         self.winning_line = None
         self.game_steps = 0
 
+    def check_win(self):
+        self.check_winner()
+        if self.winner == 'tie':
+            self.draw_tie_message()
+        else:
+            self.draw_winner_message()
+        self.draw_winning_line()
+
+    def run(self):
+        while True:
+            self.game.screen.blit(self.field_image, (0, 0))
+            self.check_events()
+            self.draw_objects()
+            self.check_win()
+            if self.player == 1 and self.winner is None:  # Assuming player 1 is the machine
+                self.make_random_move()
+                self.draw_objects()
+                self.check_win()
+
+            pg.display.update()
+            self.game.clock.tick(60)
+            
+            if self.winner is not None:
+                pg.time.wait(1000)  # esperar 1 segundo antes de reiniciar o jogo
+                self.new_game()
+
 class Game:
     def __init__(self):
         pg.init()
@@ -186,12 +192,10 @@ class Game:
         self.start_screen = StartScreen(self)
         self.tic_tac_toe = TicTacToe(self)
 
-    def run_start_screen(self):
-        self.start_screen.run()
-
     def run(self):
-        self.run_start_screen()
+        
         while True:
+            self.start_screen.run()
             self.tic_tac_toe.run()
             pg.display.update()
             self.clock.tick(60)
