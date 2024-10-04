@@ -54,7 +54,7 @@ class StartScreen:
             pg.display.update()
             self.game.clock.tick(60)
 
-class BotPlayer:
+""" class BotPlayer:
     def __init__(self, game, bot_type='random'):
         self.game = game
         self.bot_type = bot_type
@@ -64,7 +64,7 @@ class BotPlayer:
         if empty_cells:
             row, col = choice(empty_cells)
             self.game.game_array[row][col] = self.game.player
-            self.game.player = 1 - self.game.player
+            self.game.player = 1 - self.game.player """
 
 class TicTacToe:
     def __init__(self, game):
@@ -152,6 +152,8 @@ class TicTacToe:
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE:
                     self.new_game()
+                """ if event.key == pg.K_r: """
+
             if event.type == pg.MOUSEBUTTONDOWN and self.player == 0:  # Assuming player 0 is the human
                 mouse_pos = vec2(pg.mouse.get_pos()) // CELL_SIZE
                 row, col = int(mouse_pos.y), int(mouse_pos.x)
