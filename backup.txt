@@ -1,3 +1,70 @@
+best_val = -float("inf")
+        best_move = None
+
+        for row in range(3):
+            for col in range(3):
+                if self.game.check_empty_cell(row, col):
+                    self.game.game_array[row][col] = self.game.bot
+                    move_val = self.minimax(0, False)
+                    self.game.game_array[row][col] = float("inf")
+                    if move_val > best_val:
+                        best_move = (row, col)
+                        best_val = move_val
+
+        if best_move:
+            row, col = best_move
+            self.game.game_array[row][col] = self.game.bot
+
+    def minimax(self, depth, is_max):
+        score = self.evaluate()
+
+        if score == 10:
+            return score - depth
+        if score == -10:
+            return score + depth
+        if not self.is_moves_left():
+            return 0
+
+        if is_max:
+            best = -float("inf")
+            for row in range(3):
+                for col in range(3):
+                    if self.game.check_empty_cell(row, col):
+                        self.game.game_array[row][col] = self.game.bot
+                        best = max(best, self.minimax(depth + 1, not is_max))
+                        self.game.game_array[row][col] = float("inf")
+            return best
+        else:
+            best = float("inf")
+            for row in range(3):
+                for col in range(3):
+                    if self.game.check_empty_cell(row, col):
+                        self.game.game_array[row][col] = self.game.player
+                        best = min(best, self.minimax(depth + 1, not is_max))
+                        self.game.game_array[row][col] = float("inf")
+            return best
+
+    def evaluate(self):
+        for line in self.game.line_indices_array:
+            if (
+                self.game.game_array[line[0][0]][line[0][1]]
+                == self.game.game_array[line[1][0]][line[1][1]]
+                == self.game.game_array[line[2][0]][line[2][1]]
+                != float("inf")
+            ):
+                if self.game.game_array[line[0][0]][line[0][1]] == self.game.bot:
+                    return 10
+                elif self.game.game_array[line[0][0]][line[0][1]] == self.game.player:
+                    return -10
+        return 0
+
+    def is_moves_left(self):
+        for row in range(3):
+            for col in range(3):
+                if self.game.check_empty_cell(row, col):
+                    return True
+        return False
+
 import pygame as pg
 import sys
 from random import randint, choice
@@ -222,6 +289,8 @@ class BotPlayer:
             self.perfect_move()
 
     def random_move(self):
+        array = self.game.game_array
+        bot = self.game.bot
         empty_cells = [
             (row, col)
             for row in range(3)
@@ -230,79 +299,104 @@ class BotPlayer:
         ]
         if empty_cells:
             row, col = choice(empty_cells)
-            self.game.game_array[row][col] = self.game.bot
+            array[row][col] = bot
 
     def perfect_move(self):
-        best_val = -float("inf")
+        best_score = float('-inf')
         best_move = None
-        if self.game.bot is 0:
-            self.opp = 1
-        elif self.game.bot is 1:
-            self.opp = 0
-
         for row in range(3):
             for col in range(3):
                 if self.game.check_empty_cell(row, col):
                     self.game.game_array[row][col] = self.game.bot
-                    move_val = self.minimax(0, False)
-                    self.game.game_array[row][col] = float("inf")
-                    if move_val > best_val:
+                    score = self.minimax(self.game.game_array, 0, False)
+                    self.game.game_array[row][col] = None
+                    if score > best_score:
+                        best_score = score
                         best_move = (row, col)
-                        best_val = move_val
-
         if best_move:
-            row, col = best_move
-            self.game.game_array[row][col] = self.game.bot
+            self.game.game_array[best_move[0]][best_move[1]] = self.game.bot
 
-    def minimax(self, depth, is_max):
-        score = self.evaluate()
+    def minimax(self, board, depth, is_maximizing):
+        winner = self.game.check_winner()
+        if winner is not None:
+            return self.evaluate_winner(winner)
+        
+        if is_maximizing:
+            best_score = float('-inf')
+            for row in range(3):
+                for col in range(3):
+                    if self.game.check_empty_cell(row, col):
+                        board[row][col] = self.game.bot
+                        score = self.minimax(board, depth + 1, False)
+                        board[row][col] = None
+                        best_score = max(score, best_score)
+            return best_score
+        else:
+            best_score = float('inf')
+            for row in range(3):
+                for col in range(3):
+                    if self.game.check_empty_cell(row, col):
+                        board[row][col] = 1 - self.game.bot
+                        score = self.minimax(board, depth + 1, True)
+                        board[row][col] = None
+                        best_score = min(score, best_score)
+            return best_score
 
-        if score == 10:
-            return score - depth
-        if score == -10:
-            return score + depth
-        if not self.is_moves_left():
+    def evaluate_winner(self, winner):
+        if winner == self.game.bot:
+            return 1
+        elif winner == 1 - self.game.bot:
+            return -1
+        else:
             return 0
 
-        if is_max:
-            best = -INF
-            for row in range(3):
-                for col in range(3):
-                    if self.game.check_empty_cell(row, col):
-                        self.game.game_array[row][col] = self.game.bot
-                        best = max(best, self.minimax(depth + 1, not is_max))
-                        self.game.game_array[row][col] = INF
-            return best
+    """ def perfect_move(self):
+        steps = self.game.game_steps
+        array = self.game.game_array
+        bot = self.game.bot
+        corners = [(0, 0), (0, 2), (2, 0), (2, 2)]
+        edges = [(0, 1), (1, 0), (1, 2), (2, 1)]
+        center = (1, 1)
+        if bot is 0:
+            opp = 1
         else:
-            best = INF
-            for row in range(3):
-                for col in range(3):
-                    if self.game.check_empty_cell(row, col):
-                        self.game.game_array[row][col] = self.opp
-                        best = min(best, self.minimax(depth + 1, not is_max))
-                        self.game.game_array[row][col] = INF
-            return best
+            opp = 0
 
-    def evaluate(self):
-        for line in self.game.line_indices_array:
-            if (
-                self.game.game_array[line[0][0]][line[0][1]]
-                == self.game.game_array[line[1][0]][line[1][1]]
-                == self.game.game_array[line[2][0]][line[2][1]]
-                != INF
-            ):
-                if self.game.game_array[line[0][0]][line[0][1]] == self.game.bot:
-                    return 10
-                elif self.game.game_array[line[0][0]][line[0][1]] == self.opp:
-                    return -10
-        return 0
+        if steps == 0:
+            steps += 1
+            row, col = choice(corners)
+            array[row][col] = bot
 
-    def is_moves_left(self):
-        for row in range(3):
-            for col in range(3):
-                if self.game.check_empty_cell(row, col):
-                    return True
-        return False
+        elif steps == 1:
+            steps += 1
+            row, col = center
+            if array[row][col] == opp:
+                row, col = choice(corners)
+                array[row][col] = bot
+                return
+            row, col = center
+            array[row][col] = bot
+
+        elif steps == 2:
+            steps += 1
+
+        elif steps == 3:
+            steps += 1
+
+        elif steps == 4:
+            steps += 1
+
+        elif steps == 5:
+            steps += 1
+
+        elif steps == 6:
+            steps += 1
+
+        elif steps == 7:
+            steps += 1
+
+        elif steps == 8:
+            steps += 1 """
 
 
 class TicTacToe:
@@ -323,6 +417,7 @@ class TicTacToe:
         )
 
         self.game_array = [[INF, INF, INF], [INF, INF, INF], [INF, INF, INF]]
+        self.player = randint(0, 1)
 
         self.line_indices_array = [
             [(0, 0), (0, 1), (0, 2)],
@@ -422,6 +517,7 @@ class TicTacToe:
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_r:
                     self.new_game()
+                    print(f"Agora é o passo {self.game_steps}")
                 if event.key == pg.K_ESCAPE:
                     return True
 
@@ -430,6 +526,8 @@ class TicTacToe:
                 row, col = int(mouse_pos.y), int(mouse_pos.x)
                 if self.check_empty_cell(row, col):
                     self.turn = 0
+                    self.game_steps += 1
+                    print(f"Agora é o passo {self.game_steps}")
                     self.game_array[row][col] = self.player
         return None
 
@@ -437,6 +535,7 @@ class TicTacToe:
         self.game_array = [[INF, INF, INF], [INF, INF, INF], [INF, INF, INF]]
         self.winner = None
         self.winning_line = None
+        self.game_steps = 0
         self.turn = randint(0, 1)
 
     def check_win(self):
@@ -450,6 +549,7 @@ class TicTacToe:
     def run(self):
         self.create_players()
         self.new_game()
+        print(f"Agora é o passo {self.game_steps}")
         if self.playerExists:
             while True:
                 self.game.screen.blit(self.field_image, (0, 0))
@@ -471,16 +571,18 @@ class TicTacToe:
                 if self.winner is not None:
                     pg.time.wait(500)  # esperar 1 segundo antes de reiniciar o jogo
                     self.new_game()
-                    
+                    print(f"Agora é o passo {self.game_steps}")
         elif self.playerExists is False:
             for i in range(100):
                 self.new_game()
+                print(f"Agora é o passo {self.game_steps}")
                 self.game.screen.blit(self.field_image, (0, 0))
                 while True:
                     if self.turn and self.winner is None:
                         self.turn = 0
                         self.bot = 0
                         self.bot_player1.move()
+                        print(f"Agora é o passo {self.game_steps}")
                         self.draw_objects()
                         pg.display.update()
                         print("PLAYER O JOGOU")
@@ -490,6 +592,7 @@ class TicTacToe:
                         self.turn = 1
                         self.bot = 1
                         self.bot_player2.move()
+                        print(f"Agora é o passo {self.game_steps}")
                         self.draw_objects()
                         pg.display.update()
                         print("PLAYER X JOGOU")
@@ -510,6 +613,7 @@ class TicTacToe:
                     if self.winner is not None:
                         pg.time.wait(500)  # esperar 1 segundo antes de reiniciar o jogo
                         break
+
 
 class Game:
     def __init__(self):
