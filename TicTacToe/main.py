@@ -209,7 +209,6 @@ class StartScreen:
             pg.display.update()
             self.game.clock.tick(60)
 
-
 class BotPlayer:
     def __init__(self, game, bot_type="Perfect"):
         self.game = game
