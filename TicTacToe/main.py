@@ -19,7 +19,7 @@ class Player:
             1: self.perfect_move,
         }
         play[self.player_type](self.player_symbol)
-        Game().print_board(self.board)
+        # Game().print_board(self.board)
 
     def random_move(self, p):
         empty_positions = [i for i in range(1, 10) if self.board[i] == 0]
@@ -44,96 +44,90 @@ class Player:
     def two_steps_block(self, p, opp):
         b = self.board
 
-        if b[6] == b[7] == opp:
-            if b[8] == 0:
-                b[8] = p
-                return True
-            """ if b[9] == 0:
-                b[9] = p
-                return True """
-        if b[6] == b[1] == opp:
-            if b[2] == 0:
-                b[2] = p
-                return True
-            """ if b[3] == 0:
-                b[3] = p
-                return True """
-            
-        if b[8] == b[1] == opp:
-            if b[4] == 0:
-                b[4] = p
-                return True
-            """ if b[7] == 0:
-                b[7] = p
-                return True """
-        if b[8] == b[3] == opp:
-            if b[6] == 0:
-                b[6] = p
-                return True
-            """ if b[9] == 0:
-                b[9] = p
-                return True """
+        if b[0] == 4:
+            if b[6] == b[7] == opp:
+                if b[8] == 0:
+                    b[8] = p
+                    return True
+            if b[6] == b[1] == opp:
+                if b[2] == 0:
+                    b[2] = p
+                    return True
 
-        if b[4] == b[3] == opp:
-            if b[1] == 0:
-                b[1] = p
-                return True
-            """ if b[2] == 0:
-                b[2] = p
-                return True """
-        if b[4] == b[9] == opp:
-            if b[7] == 0:
-                b[7] = p
-                return True
-            """ if b[8] == 0:
-                b[8] = p
-                return True """
-            
-        if b[2] == b[7] == opp:
-            if b[1] == 0:
-                b[1] = p
-                return True
-            """ if b[4] == 0:
-                b[4] = p
-                return True """
-        if b[2] == b[9] == opp:
-            if b[3] == 0:
-                b[3] = p
-                return True
-            """ if b[6] == 0:
-                b[6] = p
-                return True """
-            
-        if b[6] == b[8] == opp:
-            if b[9] == 0:
-                b[9] = p
-                return True
-            
-        if b[4] == b[8] == opp:
-            if b[7] == 0:
-                b[7] = p
-                return True
-            
-        if b[2] == b[4] == opp:
-            if b[1] == 0:
-                b[1] = p
-                return True
-            
-        if b[2] == b[6] == opp:
-            if b[3] == 0:
-                b[3] = p
-                return True
+            if b[8] == b[1] == opp:
+                if b[4] == 0:
+                    b[4] = p
+                    return True
+            if b[8] == b[3] == opp:
+                if b[6] == 0:
+                    b[6] = p
+                    return True
 
-        if b[1] == b[9] == opp:
-            if b[2] == 0:
-                b[2] = p
-                return True
+            if b[4] == b[3] == opp:
+                if b[1] == 0:
+                    b[1] = p
+                    return True
+            if b[4] == b[9] == opp:
+                if b[7] == 0:
+                    b[7] = p
+                    return True
 
-        if b[3] == b[7] == opp:
-            if b[2] == 0:
-                b[2] = p
-                return True
+            if b[2] == b[7] == opp:
+                if b[1] == 0:
+                    b[1] = p
+                    return True
+            if b[2] == b[9] == opp:
+                if b[3] == 0:
+                    b[3] = p
+                    return True
 
+            if b[6] == b[8] == opp:
+                if b[9] == 0:
+                    b[9] = p
+                    return True
+
+            if b[4] == b[8] == opp:
+                if b[7] == 0:
+                    b[7] = p
+                    return True
+
+            if b[2] == b[4] == opp:
+                if b[1] == 0:
+                    b[1] = p
+                    return True
+
+            if b[2] == b[6] == opp:
+                if b[3] == 0:
+                    b[3] = p
+                    return True
+
+            if b[1] == b[9] == opp:
+                if b[2] == 0:
+                    b[2] = p
+                    return True
+
+            if b[3] == b[7] == opp:
+                if b[2] == 0:
+                    b[2] = p
+                    return True
+
+        if b[0] == 6:
+            if b[6] == b[7] == b[2] == opp:
+                if b[3] == 0:
+                    b[3] = p
+                    return True
+            if b[6] == b[1] == b[8] == opp:
+                if b[9] == 0:
+                    b[9] = p
+                    return True
+            if b[8] == b[3] == b[4] == opp:
+                if b[7] == 0:
+                    b[7] = p
+                    return True
+            if b[4] == b[9] == b[2] == opp:
+                if b[1] == 0:
+                    b[1] = p
+                    return True
         return False
 
     def fill(self, p):
@@ -213,6 +207,8 @@ class Player:
                 return
             if block(p, opp):
                 return
+            if two_steps_block(p, opp):
+                return
             fill(p)
             return
 
@@ -255,7 +251,7 @@ class Game:
             [1, 5, 9],
             [3, 5, 7],
         ]
-        self.p1 = Player(ALEATORIO, 1, self.board, self.win_combinations)
+        self.p1 = Player(PERFEITO, 1, self.board, self.win_combinations)
         self.p2 = Player(PERFEITO, -1, self.board, self.win_combinations)
         self.p1_wins = 0
         self.p2_wins = 0
@@ -281,7 +277,7 @@ class Game:
             if total == 3:
                 self.p1_wins += 1
                 # self.print_board(self.board)
-                print("WINNER: P1\n")
+                # print("WINNER: P1\n")
                 return 1
             elif total == -3:
                 self.p2_wins += 1
@@ -291,7 +287,7 @@ class Game:
         return 0
 
     def run(self):
-        for i in range(20):
+        for i in range(10000):
 
             # SEM ALTERNÂNCIA
             for j in range(5):
