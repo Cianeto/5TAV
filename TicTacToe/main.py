@@ -11,7 +11,7 @@ class Player:
         self.player_symbol = player_symbol
         self.board = board
         self.win_combinations = winco
-        self.moves_history = []
+        # self.moves_history = []
 
     def move(self):
         self.board[0] += 1
@@ -234,7 +234,6 @@ class Player:
         highest_rank = 0
         found_highest = False
 
-        # PRIMEIRA PARTIDA
         if board[10] == 0:
             self.random_move(board)
 
@@ -283,12 +282,12 @@ class Game:
             [1, 5, 9],
             [3, 5, 7],
         ]
-        self.p1 = Player(PERFEITO, 1, self.board, self.win_combinations)
-        self.p2 = Player(PERFEITO, -1, self.board, self.win_combinations)
+        self.p1 = Player(ALEATORIO, 1, self.board, self.win_combinations)
+        self.p2 = Player(ALEATORIO, -1, self.board, self.win_combinations)
         self.p1_wins = 0
         self.p2_wins = 0
         self.draws = 0
-        self.games_history = []
+        # self.games_history = []
 
     def print_board(self, b):
         formatted_board = f"""
