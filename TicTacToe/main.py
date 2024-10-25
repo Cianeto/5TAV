@@ -11,13 +11,11 @@ class Player:
         self.player_symbol = player_symbol
         self.board = board
         self.win_combinations = winco
+        self.moves_history = []
 
     def move(self):
         self.board[0] += 1
-        play = {
-            0: self.random_move,
-            1: self.perfect_move,
-        }
+        play = {0: self.random_move, 1: self.perfect_move, 2: self.intelligent_move}
         play[self.player_type](self.player_symbol)
         # Game().print_board(self.board)
 
@@ -231,6 +229,40 @@ class Player:
         if b[0] == 9:
             fill(p)
 
+    def intelligent_move(self, p):
+        """ board = self.board
+        highest_rank = 0
+        found_highest = False
+
+        # PRIMEIRA PARTIDA
+        if board[10] == 0:
+            self.random_move(board)
+
+        # Varrendo os vetores para achar o melhor rank
+        for ranks in board.games_history:
+            if ranks[1] >= highest_rank:  # Achando o jogo com melhor RANK
+                idJogo = ranks[0]
+                maiorRank = ranks[1]
+                jogadas = ranks[2]
+            else:
+                break
+
+        if not self.moves_history:
+            self.random_move(p)
+            return
+
+        for aux in self.moves_history:
+            move = aux[0]
+            if move[0] == 
+                best_move = move[16]
+                found_highest = True
+                break
+
+        if found_highest == False:
+            self.random_move(p)
+            return 
+        return  """
+
 
 class Game:
     def __init__(self):
@@ -256,6 +288,7 @@ class Game:
         self.p1_wins = 0
         self.p2_wins = 0
         self.draws = 0
+        self.games_history = []
 
     def print_board(self, b):
         formatted_board = f"""
@@ -287,7 +320,7 @@ class Game:
         return 0
 
     def run(self):
-        for i in range(10000):
+        for i in range(10000):  # <~~ QUANTIDADE DE PARTIDAS
 
             # SEM ALTERNÂNCIA
             for j in range(5):
