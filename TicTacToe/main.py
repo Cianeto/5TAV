@@ -1,33 +1,42 @@
 from random import choice
 
-ALEATORIO = 0
-PERFEITO = 1
-INTELIGENTE = 2
+WINCO = [  # Combinações vencedoras
+    # Linhas
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+    # Colunas
+    [1, 4, 7],
+    [2, 5, 8],
+    [3, 6, 9],
+    # Diagonais
+    [1, 5, 9],
+    [3, 5, 7],
+]
 
 
 class Player:
-    def __init__(self, player_type, player_symbol, board, winco):
+    def __init__(self, player_type, player_symbol, board):
         self.player_type = player_type
         self.player_symbol = player_symbol
         self.board = board
-        self.win_combinations = winco
         # self.moves_history = []
 
-    def move(self):
+    def move(self):  # <~~ DEFINE QUAL ESTRATÉGIA ESSE PLAYER APLICARÁ
         self.board[0] += 1
-        play = {0: self.random_move, 1: self.perfect_move, 2: self.intelligent_move}
+        play = {1: self.random_move, 2: self.perfect_move, 3: self.intelligent_move}
         play[self.player_type](self.player_symbol)
         # Game().print_board(self.board)
 
-    def random_move(self, p):
+    def random_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER ALEATÓRIO
         empty_positions = [i for i in range(1, 10) if self.board[i] == 0]
         if empty_positions:
             position = choice(empty_positions)
             self.board[position] = p
 
-    def block(self, p, opp):
+    def block(self, p, opp):  # <~~ BLOQUEAR OPONENTE (SE O PRÓXIMO MOVE DELE CONCLUIR A PARTIDA)
         b = self.board
-        for combo in self.win_combinations:
+        for combo in WINCO:
             if b[combo[0]] == b[combo[1]] == opp and b[combo[2]] == 0:
                 b[combo[2]] = p
                 return True
@@ -39,7 +48,7 @@ class Player:
                 return True
         return False
 
-    def two_steps_block(self, p, opp):
+    def two_steps_block(self, p, opp):  # <~~ BLOQUEAR OPONENTE (SE OS PRÓXIMOS DOIS MOVES DELE CONCLUIR A PARTIDA)
         b = self.board
 
         if b[0] == 4:
@@ -128,7 +137,7 @@ class Player:
                     return True
         return False
 
-    def fill(self, p):
+    def fill(self, p):  # <~~ OCUPAR ALGUMA POSIÇÃO ESPECÍFICA (CASO NÃO HAJA COMO BLOQUEAR OU VENCER)
         b = self.board
         # Corners
         for position in [1, 3, 7, 9]:
@@ -141,9 +150,9 @@ class Player:
                 b[position] = p
                 return True
 
-    def win(self, p):
+    def win(self, p):  # <~~ VENCER (CASO FALTE APENAS UMA POSIÇÃO PARA VENCER)
         b = self.board
-        for combo in self.win_combinations:
+        for combo in WINCO:
             if b[combo[0]] == b[combo[1]] == p and b[combo[2]] == 0:
                 b[combo[2]] = p
                 return True
@@ -155,7 +164,7 @@ class Player:
                 return True
         return False
 
-    def perfect_move(self, p):
+    def perfect_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER PERFEITO
         opp = -1 if p == 1 else 1
         b = self.board
         block = self.block
@@ -229,8 +238,8 @@ class Player:
         if b[0] == 9:
             fill(p)
 
-    def intelligent_move(self, p):
-        """ board = self.board
+    def intelligent_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER INTELIGENTE
+        """board = self.board
         highest_rank = 0
         found_highest = False
 
@@ -252,15 +261,15 @@ class Player:
 
         for aux in self.moves_history:
             move = aux[0]
-            if move[0] == 
+            if move[0] ==
                 best_move = move[16]
                 found_highest = True
                 break
 
         if found_highest == False:
             self.random_move(p)
-            return 
-        return  """
+            return
+        return"""
 
 
 class Game:
@@ -269,27 +278,12 @@ class Game:
         """ 1 | 2 | 3
             4 | 5 | 6
             7 | 8 | 9 """
-        self.win_combinations = [
-            # Linhas
-            [1, 2, 3],
-            [4, 5, 6],
-            [7, 8, 9],
-            # Colunas
-            [1, 4, 7],
-            [2, 5, 8],
-            [3, 6, 9],
-            # Diagonais
-            [1, 5, 9],
-            [3, 5, 7],
-        ]
-        self.p1 = Player(ALEATORIO, 1, self.board, self.win_combinations)
-        self.p2 = Player(ALEATORIO, -1, self.board, self.win_combinations)
         self.p1_wins = 0
         self.p2_wins = 0
         self.draws = 0
         # self.games_history = []
 
-    def print_board(self, b):
+    def print_board(self, b):  # <~~ PRINTAR ESTADO ATUAL DO TABULEIRO
         formatted_board = f"""
         {b[1]} | {b[2]} | {b[3]}
         -----------
@@ -299,74 +293,128 @@ class Game:
         """
         print(formatted_board)
 
-    def reset_board(self):
+    def progress_bar(self, percentage):  # <~~ FUNÇÃO AUXILIAR DO print_progress()
+        progress = percentage // 2
+        remaining = 50 - progress
+        return "\033[92m" + "#" * progress + "\033[0m" + "-" * remaining
+
+    def print_progress(self, i, t):  # <~~ PRINTAR PROGRESSO DA EXECUÇÃO DO PROGRAMA
+        if i == 0:
+            print(f"\n[--------------------------------------------------] 0%", end="\r")
+            return
+        if i == t - 1:
+            print(f"\033[K[\033[92m##################################################\033[0m] 100%")
+            return
+
+        percentage = int((i / t) * 100)
+        if i % (t // 100) == 0:
+            print(f"\033[K[{self.progress_bar(percentage)}] {percentage}%", end="\r")
+
+    def reset_board(self):  # <~~ ZERAR TABULEIRO
         self.board.clear()
         self.board.extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
-    def check_win(self):
-        for combo in self.win_combinations:
+    def reset_stats(self):  # <~~ ZERAR VITÓRIAS E EMPATES
+        self.p1_wins = 0
+        self.p2_wins = 0
+        self.draws = 0
+
+    def check_win(self):  # <~~ PERCORRER TABULEIRO PARA VERIFICAR SE ALGUÉM VENCEU
+        for combo in WINCO:
             total = self.board[combo[0]] + self.board[combo[1]] + self.board[combo[2]]
             if total == 3:
                 self.p1_wins += 1
                 # self.print_board(self.board)
                 # print("WINNER: P1\n")
                 return 1
-            elif total == -3:
+            if total == -3:
                 self.p2_wins += 1
                 # self.print_board(self.board)
                 # print("WINNER: P2\n")
                 return 1
         return 0
 
-    def run(self):
-        for i in range(10000):  # <~~ QUANTIDADE DE PARTIDAS
+    def run(self):  # <~~ EXECUÇÃO DO PROGRAMA
+        while True:
+            try:  # <~~ VALIDAR INPUT
+                p1 = int(input("\033[1mP1\033[0m Aleatório (1) OU Perfeito (2) OU Inteligente (3): "))
+                if p1 not in [1, 2, 3]:
+                    print("\n\033[91mEntrada inválida para P1. Tente novamente.\033[0m\n")
+                    continue
 
-            # SEM ALTERNÂNCIA
-            for j in range(5):
-                self.p1.move()
-                if self.board[0] >= 5 and self.check_win():
-                    break
+                p2 = int(input("\n\033[1mP2\033[0m Aleatório (1) OU Perfeito (2) OU Inteligente (3): "))
+                if p2 not in [1, 2, 3]:
+                    print("\n\033[91mEntrada inválida para P2. Tente novamente.\033[0m\n")
+                    continue
 
-                if j == 4:
-                    self.draws += 1
-                    # self.print_board(self.board)
-                    # print("DRAW\n")
-                    break
+                total_rounds = int(input("\nNúmero de partidas: "))
+                if not total_rounds > 0:
+                    print("\n\033[91mEntrada inválida para número de partidas. Tente novamente.\033[0m\n")
+                    continue
 
-                self.p2.move()
-                if self.board[0] >= 5 and self.check_win():
-                    break
+                alternating = int(input("\nSem alternância (0) OU Com alternância (1): "))
+                if alternating not in [0, 1]:
+                    print("\n\033[91mEntrada inválida para alternância. Tente novamente.\033[0m\n")
+                    continue
+            except ValueError:  # <~~ SE O INPUT LER ALGO QUE NÃO SEJA UM NÚMERO
+                print("\n\033[91mEntrada não numérica. Tente novamente.\033[0m\n")
+                continue
 
-            # COM ALTERNÂNCIA
-            """ starting_player = i % 2
-            for j in range(5):
-                if starting_player == 0:
-                    self.p1.move()
-                    if self.board[0] >= 5 and self.check_win():
-                        break
-                    if j == 4:
-                        self.draws += 1
-                        # self.print_board(self.board)
-                        # print("DRAW\n")
-                        break
-                    self.p2.move()
-                    if self.board[0] >= 5 and self.check_win():
-                        break
-                else:
-                    self.p2.move()
-                    if self.board[0] >= 5 and self.check_win():
-                        break
-                    if j == 4:
-                        self.draws += 1
-                        # self.print_board(self.board)
-                        # print("DRAW\n")
-                        break
-                    self.p1.move()
-                    if self.board[0] >= 5 and self.check_win():
-                        break """
+            p1 = Player(p1, 1, self.board)
+            p2 = Player(p2, -1, self.board)
 
-            self.reset_board()
-        print(f"P1 -> {self.p1_wins}\nP2 -> {self.p2_wins}\nEMPATES -> {self.draws}")
+            if alternating == False:  # SEM ALTERNÂNCIA
+                for i in range(total_rounds):  # <~~ QUANTIDADE DE PARTIDAS
+                    for j in range(5):
+                        p1.move()  # <~~ MOVIMENTO DO JOGADOR 1
+                        if self.board[0] >= 5 and self.check_win():
+                            break
+
+                        if j == 4:
+                            self.draws += 1
+                            # self.print_board(self.board)
+                            # print("DRAW\n")
+                            break
+
+                        p2.move()  # <~~ MOVIMENTO DO JOGADOR 2
+                        if self.board[0] >= 5 and self.check_win():
+                            break
+                    self.reset_board()
+                    self.print_progress(i, total_rounds)
+
+            else:  # COM ALTERNÂNCIA
+                for i in range(total_rounds):
+                    starting_player = i % 2
+                    for j in range(5):
+                        if starting_player == 0:
+                            p1.move()
+                            if self.board[0] >= 5 and self.check_win():
+                                break
+                            if j == 4:
+                                self.draws += 1
+                                # self.print_board(self.board)
+                                # print("DRAW\n")
+                                break
+                            p2.move()
+                            if self.board[0] >= 5 and self.check_win():
+                                break
+                        else:
+                            p2.move()
+                            if self.board[0] >= 5 and self.check_win():
+                                break
+                            if j == 4:
+                                self.draws += 1
+                                # self.print_board(self.board)
+                                # print("DRAW\n")
+                                break
+                            p1.move()
+                            if self.board[0] >= 5 and self.check_win():
+                                break
+                    self.reset_board()
+                    self.print_progress(i, total_rounds)
+
+            print(f"\nP1 -> {self.p1_wins}\nP2 -> {self.p2_wins}\nEMPATES -> {self.draws}\n")
+            self.reset_stats()
 
 
 if __name__ == "__main__":
