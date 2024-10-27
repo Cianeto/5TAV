@@ -20,15 +20,19 @@ class Player:
         self.player_type = player_type
         self.player_symbol = player_symbol
         self.board = board
-        # self.moves_history = []
+        self.matches_won = []
+        self.matches_drawn = []
+        self.current_match = []
+        self.moves_used = []
+        self.gen_match_id = 1
 
     def move(self):  # <~~ DEFINE QUAL ESTRATÉGIA ESSE PLAYER APLICARÁ
-        self.board[0] += 1
         play = {1: self.random_move, 2: self.perfect_move, 3: self.intelligent_move}
         play[self.player_type](self.player_symbol)
         # Game().print_board(self.board)
 
     def random_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER ALEATÓRIO
+        self.board[0] += 1
         empty_positions = [i for i in range(1, 10) if self.board[i] == 0]
         if empty_positions:
             position = choice(empty_positions)
@@ -165,6 +169,7 @@ class Player:
         return False
 
     def perfect_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER PERFEITO
+        self.board[0] += 1
         opp = -1 if p == 1 else 1
         b = self.board
         block = self.block
@@ -238,43 +243,54 @@ class Player:
         if b[0] == 9:
             fill(p)
 
+    def find_next_move(self, m, match_type, p):
+        aux = 0
+        if match_type:
+            filtered_matches = [match for match in self.matches_won if match[0] == m[0] + 1]
+            for match in filtered_matches:
+                if match[11] > aux:
+                    aux = match[11]
+                    pos = match[10]
+            return pos
+
     def intelligent_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER INTELIGENTE
-        """board = self.board
-        highest_rank = 0
-        found_highest = False
 
-        if board[10] == 0:
-            self.random_move(board)
+        highest_score = 0
+        aux = self.board.copy()
+        aux.append(1)
+        aux.append(self.gen_match_id)
+        self.current_match.append(aux)
 
-        # Varrendo os vetores para achar o melhor rank
-        for ranks in board.games_history:
-            if ranks[1] >= highest_rank:  # Achando o jogo com melhor RANK
-                idJogo = ranks[0]
-                maiorRank = ranks[1]
-                jogadas = ranks[2]
-            else:
-                break
+        b = self.board[1:10]
 
-        if not self.moves_history:
-            self.random_move(p)
+        filtered_won_matches = [match for match in self.matches_won if match[0] == self.board[0] + 1]
+        for match in filtered_won_matches:
+            match[match[10]] = 0
+            if match[1:10] == b and match[11] > highest_score:
+                highest_score = match[11]
+                best_position = match[10]
+        if highest_score != 0:
+            self.board[0] += 1
+            self.board[best_position] = p
+            return
+        
+        filtered_drawn_matches = [match for match in self.matches_drawn if match[0] == self.board[0] + 1]
+        for match in filtered_drawn_matches:
+            match[match[10]] = 0
+            if match[1:10] == b and match[11] > highest_score:
+                highest_score = match[11]
+                best_position = match[10]
+        if highest_score != 0:
+            self.board[0] += 1
+            self.board[best_position] = p
             return
 
-        for aux in self.moves_history:
-            move = aux[0]
-            if move[0] ==
-                best_move = move[16]
-                found_highest = True
-                break
-
-        if found_highest == False:
-            self.random_move(p)
-            return
-        return"""
+        self.random_move(p)
 
 
 class Game:
     def __init__(self):
-        self.board = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # posição 0 é o número de passos
+        self.board = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # [0] = núm. de passos, [10] = última posição preenchida
         """ 1 | 2 | 3
             4 | 5 | 6
             7 | 8 | 9 """
@@ -303,16 +319,17 @@ class Game:
             print(f"\n[--------------------------------------------------] 0%", end="\r")
             return
         if i == t - 1:
-            print(f"\033[K[\033[92m##################################################\033[0m] 100%")
+            print(f"\033[K[\033[92m##################################################\033[0m] \033[92m100%\033[0m")
             return
 
-        percentage = int((i / t) * 100)
-        if i % (t // 100) == 0:
-            print(f"\033[K[{self.progress_bar(percentage)}] {percentage}%", end="\r")
+        if t >= 100:
+            percentage = int((i / t) * 100)
+            if i % (t // 100) == 0:
+                print(f"\033[K[{self.progress_bar(percentage)}] {percentage}%", end="\r")
 
     def reset_board(self):  # <~~ ZERAR TABULEIRO
         self.board.clear()
-        self.board.extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        self.board.extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
     def reset_stats(self):  # <~~ ZERAR VITÓRIAS E EMPATES
         self.p1_wins = 0
