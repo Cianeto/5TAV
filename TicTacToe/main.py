@@ -397,6 +397,10 @@ class Game:
         self.p2.win_count = 0
         self.draw_count = 0
 
+    def log_array_to_file(self, arr):
+        with open("log.txt", "a") as log_file:
+            log_file.write(f"{arr}\n")
+
     def check_win(self):  # <~~ PERCORRER TABULEIRO PARA VERIFICAR SE ALGUÉM VENCEU
         for combo in WINCO:
             total = self.board[combo[0]] + self.board[combo[1]] + self.board[combo[2]]
@@ -445,6 +449,7 @@ class Game:
                 for self.i in range(self.total_rounds):  # <~~ QUANTIDADE DE PARTIDAS
                     for j in range(5):
                         self.p1.move()  # <~~ MOVIMENTO DO JOGADOR 1
+                        self.log_array_to_file(self.board)
                         if self.board[0] >= 5 and self.check_win():
                             break
 
@@ -455,6 +460,7 @@ class Game:
                             break
 
                         self.p2.move()  # <~~ MOVIMENTO DO JOGADOR 2
+                        self.log_array_to_file(self.board)
                         if self.board[0] >= 5 and self.check_win():
                             break
                     self.reset_board()
@@ -466,6 +472,7 @@ class Game:
                     for j in range(5):
                         if starting_player == 0:
                             self.p1.move()
+                            self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                             if j == 4:
@@ -474,10 +481,12 @@ class Game:
                                 # print("DRAW\n")
                                 break
                             self.p2.move()
+                            self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                         else:
                             self.p2.move()
+                            self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                             if j == 4:
@@ -486,6 +495,7 @@ class Game:
                                 # print("DRAW\n")
                                 break
                             self.p1.move()
+                            self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                     self.reset_board()
