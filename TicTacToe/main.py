@@ -278,7 +278,7 @@ class Player:
 
     def intelligent_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER INTELIGENTE
         # [10] = última posição jogada
-        # [11] = raiz da árvore de jogadas
+        # [11] = número da rodada
         # [12] = pontuação
         # [13+] = jogadas ainda não feitas
 
@@ -350,7 +350,7 @@ class Player:
 class Game:
     def __init__(self):
         self.board = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # [0] = núm. de passos, [10] = última posição preenchida
+        # [0] = núm. de passos, [10] = última posição preenchida, [11] = número da rodada
         """ 1 | 2 | 3
             4 | 5 | 6
             7 | 8 | 9 """
@@ -390,7 +390,7 @@ class Game:
 
     def reset_board(self):  # <~~ ZERAR TABULEIRO
         self.board.clear()
-        self.board.extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, self.i])
+        self.board.extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, self.i + 1])
 
     def reset_stats(self):  # <~~ ZERAR VITÓRIAS E EMPATES
         self.p1.win_count = 0
