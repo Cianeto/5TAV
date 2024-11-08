@@ -1,4 +1,10 @@
 from random import choice
+import sys
+import csv
+
+sys.path.append("TicTacToe/matplotlib")
+import matplotlib.pyplot as plt
+
 
 WINCO = [  # Combinações vencedoras
     # Linhas
@@ -395,9 +401,43 @@ class Game:
         for board in self.tictactoe_debug:
             print(board + "\n")
 
-    def log_array_to_file(self, arr):
-        with open("log.txt", "a") as log_file:
-            log_file.write(f"{arr}\n")
+    def write_log(self):
+        with open("TicTacToe/log.csv", "a") as log_file:
+            elements = self.board[11:15]
+            csv_line = ",".join(map(str, elements))
+            log_file.write(f"{csv_line}\n")
+
+    def reset_log(self):
+        with open("TicTacToe/log.csv", "w") as log_file:
+            log_file.write("rounds,p1,p2,draws\n")
+
+    def draw_graph(self):
+        rounds = []
+        p1 = []
+        p2 = []
+        draws = []
+
+        with open("TicTacToe/log.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                rounds.append(int(row["rounds"]))
+                p1.append(int(row["p1"]))
+                p2.append(int(row["p2"]))
+                draws.append(int(row["draws"]))
+
+        # Plot the data
+        plt.plot(rounds, p1, label="P1 Wins")
+        plt.plot(rounds, p2, label="P2 Wins")
+        plt.plot(rounds, draws, label="Draws")
+
+        # Add labels and title
+        plt.xlabel("Rounds")
+        plt.ylabel("Scores")
+        plt.title("Game Scores Over Rounds")
+        plt.legend()
+
+        # Show the plot
+        plt.show()
 
     def check_win(self):  # <~~ PERCORRER TABULEIRO PARA VERIFICAR SE ALGUÉM VENCEU
         for combo in WINCO:
@@ -407,12 +447,14 @@ class Game:
                 # print("WINNER: P1\n")
                 # if self.i > 10000:
                 #    print("NAOOOOOO")
+                self.write_log()
                 return 1
             if total == -3:
                 self.board[13] += 1
                 # print("WINNER: P2\n")
                 # if self.i > 10000:
                 #    print("NAOOOOOO")
+                self.write_log()
                 return 1
         return 0
 
@@ -445,24 +487,22 @@ class Game:
             self.p1 = Player(p1, 1, self)
             self.p2 = Player(p2, -1, self)
 
+            self.reset_log()
+
             if alternating == False:  # SEM ALTERNÂNCIA
                 for self.i in range(self.total_rounds):  # <~~ QUANTIDADE DE PARTIDAS
                     for j in range(5):
                         self.p1.move()  # <~~ MOVIMENTO DO JOGADOR 1
-                        # self.store_board_to_debug()
-                        # self.log_array_to_file(self.board)
                         if self.board[0] >= 5 and self.check_win():
                             break
 
                         if j == 4:
                             self.board[14] += 1
+                            self.write_log()
                             # print("DRAW\n")
-                            # self.print_stored_boards()
                             break
 
                         self.p2.move()  # <~~ MOVIMENTO DO JOGADOR 2
-                        self.store_board_to_debug()
-                        # self.log_array_to_file(self.board)
                         if self.board[0] >= 5 and self.check_win():
                             break
                     self.reset_board()
@@ -475,28 +515,26 @@ class Game:
                     for j in range(5):
                         if starting_player == 0:
                             self.p1.move()
-                            # self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                             if j == 4:
                                 self.board[14] += 1
+                                self.write_log()
                                 # print("DRAW\n")
                                 break
                             self.p2.move()
-                            # self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                         else:
                             self.p2.move()
-                            # self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                             if j == 4:
                                 self.board[14] += 1
+                                self.write_log()
                                 # print("DRAW\n")
                                 break
                             self.p1.move()
-                            # self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                     self.reset_board()
@@ -504,6 +542,7 @@ class Game:
 
             print(f"\nP1 -> {self.board[12]}\nP2 -> {self.board[13]}\nEMPATES -> {self.board[14]}\n")
             self.reset_all()
+            self.draw_graph()
 
 
 if __name__ == "__main__":
