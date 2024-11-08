@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from random import choice
 import csv
 
@@ -408,7 +408,7 @@ class Game:
         with open("TicTacToe/log.csv", "w") as log_file:
             log_file.write("rounds,p1,p2,draws\n")
 
-    def draw_graph(self):
+    """ def draw_graph(self):
         rounds = []
         p1 = []
         p2 = []
@@ -434,7 +434,7 @@ class Game:
         plt.legend()
 
         # Show the plot
-        plt.show()
+        plt.show() """
 
     def check_win(self):  # <~~ PERCORRER TABULEIRO PARA VERIFICAR SE ALGUÉM VENCEU
         for combo in WINCO:
@@ -542,7 +542,7 @@ class Game:
             )
 
             self.reset_all()
-            self.draw_graph()
+            # self.draw_graph()
 
 
 if __name__ == "__main__":
