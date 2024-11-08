@@ -21,12 +21,14 @@ class Player:
         self.board = self.game.board
         self.player_type = player_type
         self.player_symbol = player_symbol
-        self.win_count = 0
         if self.player_type == 3:
+            if self.player_symbol == 1:
+                self.win_pos = 12
+            else:
+                self.win_pos = 13
+            self.ranked_moves = []
             self.random_moves = []
-            self.winning_moves = []
-            self.database = []
-            self.moves_used = []
+            self.move_database = []
             self.win_flag = 0
             self.draw_flag = 0
 
@@ -38,10 +40,9 @@ class Player:
     def random_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER ALEATÓRIO
         self.board[0] += 1
         empty_positions = [i for i in range(1, 10) if self.board[i] == 0]
-        if empty_positions:
-            pos = choice(empty_positions)
-            self.board[pos] = p
-            self.board[10] = pos
+        pos = choice(empty_positions)
+        self.board[pos] = p
+        self.board[10] = pos
 
     def block(self, p, opp):  # <~~ BLOQUEAR OPONENTE (SE O PRÓXIMO MOVE DELE CONCLUIR A PARTIDA)
         b = self.board
@@ -278,66 +279,60 @@ class Player:
 
     def intelligent_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER INTELIGENTE
         # [10] = última posição jogada
-        # [11] = número da rodada
-        # [12] = pontuação
-        # [13+] = jogadas ainda não feitas
+        # [11] = núm. de jogos
+        # [12] = P1 vitórias
+        # [13] = P2 vitórias
+        # [14] = empates
+        # [15] = pontuação
 
         self.board[0] += 1
         b = self.board[1:10]
 
         if self.board[0] == 1 or self.board[0] == 2:  # <~~ NOVO ROUND
-            self.moves_flag = None
-            if self.win_flag < self.win_count:  # <~~ PLAYER VENCEU A PARTIDA
+            if self.win_flag < self.board[self.win_pos]:  # <~~ PLAYER VENCEU A PARTIDA
                 self.win_flag += 1
                 for move in self.random_moves:
-                    move.append(1)  # PONTUAÇÃO
-                    self.winning_moves.append(move)
-                    unused_moves = [i for i in range(1, 10) if move[i] == 0 and i != move[10]]
-                    for unused_move in unused_moves:
-                        move.append(unused_move)
-                    move[12] == None
-                    self.database.append(move)
-                for move in self.moves_used:
-                    if move[1]:
-                        self.winning_moves[move[0]][12] += 1
-                    else:
-                        aux = self.database[move[0]][0:13]
-                        aux[12] = 1
-                        self.winning_moves.append(aux)
+                    self.move_database.append(move)  # <~~ JOGADA ALEATÓRIA ADICIONADA À BASE DE DADOS
+                for move_pos in self.ranked_moves:
+                    self.move_database[move_pos][15] += 1  # <~~ RECOMPENSA
 
-            elif self.draw_flag == self.game.draw_count and self.moves_used:  # <~~ PLAYER PERDEU A PARTIDA
-                for move in self.moves_used:
-                    if move[1]:
-                        del self.winning_moves[move[0]]
+            elif self.draw_flag == self.board[14]:  # <~~ PLAYER PERDEU A PARTIDA
+                self.ranked_moves.sort(reverse=True)
+                for move_pos in self.ranked_moves:
+                    self.move_database[move_pos][15] -= 10  # <~~ PUNIÇÃO POR PERDER
+                    if self.move_database[move_pos][15] < 0:  # <~~ PONTUAÇÃO NEGATIVA -> RETIRA JOGADA DA BASE DE DADOS
+                        del self.move_database[move_pos]
 
             else:  # <~~ PARTIDA TERMINOU EM EMPATE
                 self.draw_flag += 1
+                for move in self.ranked_moves:
+                    self.move_database[move][15] -= 1  # <~~ PUNIÇÃO POR EMPATAR
+                for move_pos in self.random_moves:
+                    self.move_database.append(move_pos)  # <~~ JOGADA ALEATÓRIA ADICIONADA À BASE DE DADOS
 
+            self.move_database.sort(key=lambda sub_arr: sub_arr[15], reverse=True)
             self.random_moves = []
-            self.moves_used = []
+            self.ranked_moves = []
 
-        for pattern in self.database:
-            if pattern[0] == self.board[0] and pattern[1:10] == b and len(pattern) > 13:
-                self.board[pattern[13]] = p
-                self.board[10] = pattern[13]
-                del pattern[13]
-                self.moves_used.append((self.database.index(pattern), 0))
-                return
+        possible_move_exists = [
+            move + [index]
+            for index, move in enumerate(self.move_database)
+            if move[0] == self.board[0] and move[1:10] == b
+        ]
+        if possible_move_exists:
+            aux = [possible_move_exists[0]]
+            for move in possible_move_exists[1:]:
+                if move[15] < aux[0][15]:
+                    break
+                aux.append(move)
 
-        win_moves = [move for move in self.winning_moves if move[0] == self.board[0] and move[1:10] == b]
-        if win_moves:
-            for move in win_moves:
-                if move[12] >= 100:
-                    self.board[move[10]] = p
-                    self.board[10] = move[10]
-                    self.moves_used.append((self.winning_moves.index(move), 1))
-
-            win_move = choice(win_moves)
-            self.board[win_move[10]] = p
-            self.board[10] = win_move[10]
-            self.moves_used.append((self.winning_moves.index(win_move), 1))
+            aux = choice(aux)
+            self.ranked_moves.append(aux[16])
+            self.board[aux[10]] = p
+            self.board[10] = aux[10]
             return
 
+        # JOGADA ALEATÓRIA CASO NÃO ENCONTRE JOGADA COM PONTUAÇÃO SUFICIENTE NA BASE DE DADOS
         empty_positions = [i for i in range(1, 10) if self.board[i] == 0]
         pos = choice(empty_positions)
         self.board[pos] = p
@@ -349,26 +344,14 @@ class Player:
 
 class Game:
     def __init__(self):
-        self.board = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # [0] = núm. de passos, [10] = última posição preenchida, [11] = número da rodada
+        self.board = [0] * 16  # [0] = passos, [10] = última posição jogada
+        # [11] = núm. de jogos, [12] = P1 vitórias, [13] = P2 vitórias, [14] = empates, [15] = pontuação
         """ 1 | 2 | 3
             4 | 5 | 6
             7 | 8 | 9 """
-        self.draw_count = 0
         self.p1 = None
         self.p2 = None
-        # self.games_history = []
-
-    def print_board(self):  # <~~ PRINTAR ESTADO ATUAL DO TABULEIRO
-        b = self.board
-        formatted_board = f"""
-        {b[1]} | {b[2]} | {b[3]}
-        -----------
-        {b[4]} | {b[5]} | {b[6]}
-        -----------
-        {b[7]} | {b[8]} | {b[9]}
-        """
-        print(formatted_board)
+        self.tictactoe_debug = []
 
     def progress_bar(self, percentage):  # <~~ FUNÇÃO AUXILIAR DO print_progress()
         progress = percentage // 2
@@ -389,13 +372,28 @@ class Game:
                 print(f"\033[K[{self.progress_bar(percentage)}] {percentage}%", end="\r")
 
     def reset_board(self):  # <~~ ZERAR TABULEIRO
-        self.board.clear()
-        self.board.extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, self.i + 1])
+        for i in range(11):
+            self.board[i] = 0
+        self.board[11] += 1
 
-    def reset_stats(self):  # <~~ ZERAR VITÓRIAS E EMPATES
-        self.p1.win_count = 0
-        self.p2.win_count = 0
-        self.draw_count = 0
+    def reset_all(self):  # <~~ ZERAR VITÓRIAS E EMPATES
+        self.board.clear()
+        self.board.extend([0] * 16)
+
+    def store_board_to_debug(self):
+        b = self.board
+        formatted_board = f"""
+        {b[1]} | {b[2]} | {b[3]}
+        -----------
+        {b[4]} | {b[5]} | {b[6]}
+        -----------
+        {b[7]} | {b[8]} | {b[9]}
+        """
+        self.tictactoe_debug.append(formatted_board)
+
+    def print_stored_boards(self):
+        for board in self.tictactoe_debug:
+            print(board + "\n")
 
     def log_array_to_file(self, arr):
         with open("log.txt", "a") as log_file:
@@ -405,14 +403,16 @@ class Game:
         for combo in WINCO:
             total = self.board[combo[0]] + self.board[combo[1]] + self.board[combo[2]]
             if total == 3:
-                self.p1.win_count += 1
-                # self.print_board(self.board)
+                self.board[12] += 1
                 # print("WINNER: P1\n")
+                # if self.i > 10000:
+                #    print("NAOOOOOO")
                 return 1
             if total == -3:
-                self.p2.win_count += 1
-                # self.print_board(self.board)
+                self.board[13] += 1
                 # print("WINNER: P2\n")
+                # if self.i > 10000:
+                #    print("NAOOOOOO")
                 return 1
         return 0
 
@@ -449,22 +449,25 @@ class Game:
                 for self.i in range(self.total_rounds):  # <~~ QUANTIDADE DE PARTIDAS
                     for j in range(5):
                         self.p1.move()  # <~~ MOVIMENTO DO JOGADOR 1
-                        self.log_array_to_file(self.board)
+                        # self.store_board_to_debug()
+                        # self.log_array_to_file(self.board)
                         if self.board[0] >= 5 and self.check_win():
                             break
 
                         if j == 4:
-                            self.draw_count += 1
-                            # self.print_board()
+                            self.board[14] += 1
                             # print("DRAW\n")
+                            # self.print_stored_boards()
                             break
 
                         self.p2.move()  # <~~ MOVIMENTO DO JOGADOR 2
-                        self.log_array_to_file(self.board)
+                        self.store_board_to_debug()
+                        # self.log_array_to_file(self.board)
                         if self.board[0] >= 5 and self.check_win():
                             break
                     self.reset_board()
                     self.print_progress()
+                    # self.tictactoe_debug = []
 
             else:  # COM ALTERNÂNCIA
                 for self.i in range(self.total_rounds):
@@ -472,37 +475,35 @@ class Game:
                     for j in range(5):
                         if starting_player == 0:
                             self.p1.move()
-                            self.log_array_to_file(self.board)
+                            # self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                             if j == 4:
-                                self.draw_count += 1
-                                # self.print_board()
+                                self.board[14] += 1
                                 # print("DRAW\n")
                                 break
                             self.p2.move()
-                            self.log_array_to_file(self.board)
+                            # self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                         else:
                             self.p2.move()
-                            self.log_array_to_file(self.board)
+                            # self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                             if j == 4:
-                                self.draw_count += 1
-                                # self.print_board()
+                                self.board[14] += 1
                                 # print("DRAW\n")
                                 break
                             self.p1.move()
-                            self.log_array_to_file(self.board)
+                            # self.log_array_to_file(self.board)
                             if self.board[0] >= 5 and self.check_win():
                                 break
                     self.reset_board()
                     self.print_progress()
 
-            print(f"\nP1 -> {self.p1.win_count}\nP2 -> {self.p2.win_count}\nEMPATES -> {self.draw_count}\n")
-            self.reset_stats()
+            print(f"\nP1 -> {self.board[12]}\nP2 -> {self.board[13]}\nEMPATES -> {self.board[14]}\n")
+            self.reset_all()
 
 
 if __name__ == "__main__":
