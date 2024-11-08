@@ -1,6 +1,6 @@
 # import matplotlib.pyplot as plt
+# import csv
 from random import choice
-import csv
 
 
 WINCO = [  # Combinações vencedoras
