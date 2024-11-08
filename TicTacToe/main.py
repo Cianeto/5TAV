@@ -1,9 +1,6 @@
-from random import choice
-import sys
-import csv
-
-sys.path.append("TicTacToe/matplotlib")
 import matplotlib.pyplot as plt
+from random import choice
+import csv
 
 
 WINCO = [  # Combinações vencedoras
@@ -540,7 +537,10 @@ class Game:
                     self.reset_board()
                     self.print_progress()
 
-            print(f"\nP1 -> {self.board[12]}\nP2 -> {self.board[13]}\nEMPATES -> {self.board[14]}\n")
+            print(
+                f"\nP1 -> {self.board[12]} ({self.board[12]/self.total_rounds*100:.2f}%)\nP2 -> {self.board[13]} ({self.board[13]/self.total_rounds*100:.2f}%)\nEMPATES -> {self.board[14]} ({self.board[14]/self.total_rounds*100:.2f}%)\n"
+            )
+
             self.reset_all()
             self.draw_graph()
 
