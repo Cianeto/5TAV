@@ -1,8 +1,9 @@
-import os
 import librosa
 import numpy as np
 import tensorflow as tf
-from sklearn.model_selection import train_test_split
+from tkinter import Tk, Button, Label, filedialog
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
 
 Input = tf.keras.layers.Input
 Conv2D = tf.keras.layers.Conv2D
@@ -15,95 +16,63 @@ to_categorical = tf.keras.utils.to_categorical
 resize = tf.image.resize
 load_model = tf.keras.models.load_model
 
-# Define your folder structure
-data_dir = "dataset"
-classes = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
-# Define the target shape for input spectrograms
-target_shape = (128, 128)
-
-
-""" # Load and preprocess audio data
-def load_and_preprocess_data(data_dir, classes, target_shape=(128, 128)):
-    data = []
-    labels = []
-
-    for i, class_name in enumerate(classes):
-        class_dir = os.path.join(data_dir, class_name)
-        for filename in os.listdir(class_dir):
-            if filename.endswith(".wav"):
-                file_path = os.path.join(class_dir, filename)
-                audio_data, sample_rate = librosa.load(file_path, sr=None)
-                # Perform preprocessing (e.g., convert to Mel spectrogram and resize)
-                mel_spectrogram = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
-                mel_spectrogram = resize(np.expand_dims(mel_spectrogram, axis=-1), target_shape)
-                data.append(mel_spectrogram)
-                labels.append(i)
-
-    return np.array(data), np.array(labels)
-
-
-# Split data into training and testing sets
-data, labels = load_and_preprocess_data(data_dir, classes)
-labels = to_categorical(labels, num_classes=len(classes))  # Convert labels to one-hot encoding
-X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
-
-# Create a neural network model
-input_shape = X_train[0].shape
-input_layer = Input(shape=input_shape)
-x = Conv2D(32, (3, 3), activation="relu")(input_layer)
-x = MaxPooling2D((2, 2))(x)
-x = Conv2D(64, (3, 3), activation="relu")(x)
-x = MaxPooling2D((2, 2))(x)
-x = Flatten()(x)
-x = Dense(64, activation="relu")(x)
-output_layer = Dense(len(classes), activation="softmax")(x)
-model = Model(input_layer, output_layer)
-
-# Compile the model
-model.compile(optimizer=Adam(learning_rate=0.001), loss="categorical_crossentropy", metrics=["accuracy"])
-
-# Train the model
-model.fit(X_train, y_train, epochs=50, batch_size=32, validation_data=(X_test, y_test))
-
-# Save the model
-model.save("audio_classification_model.keras") """
-
-# Load the saved model
-model = load_model("audio_classification_model.keras")
-
-
-# Function to preprocess and classify an audio file
+# Função para carregar e preprocessar o arquivo de áudio
 def test_audio(file_path, model):
-    # Load and preprocess the audio file
     audio_data, sample_rate = librosa.load(file_path, sr=None)
     mel_spectrogram = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
     mel_spectrogram = resize(np.expand_dims(mel_spectrogram, axis=-1), target_shape)
     mel_spectrogram = tf.reshape(mel_spectrogram, (1,) + target_shape + (1,))
-
-    # Make predictions
     predictions = model.predict(mel_spectrogram)
-
-    # Get the class probabilities
     class_probabilities = predictions[0]
-
-    # Get the predicted class index
     predicted_class_index = np.argmax(class_probabilities)
+    return mel_spectrogram, class_probabilities, predicted_class_index
 
-    return class_probabilities, predicted_class_index
+
+# Função para selecionar o arquivo e exibir os resultados
+def select_file():
+    file_path = filedialog.askopenfilename(filetypes=[("Audio Files", "*.wav")])
+    if file_path:
+        mel_spectrogram, class_probabilities, predicted_class_index = test_audio(file_path, model)
+        predicted_class = classes[predicted_class_index]
+        result_label.config(text=f"Número: {predicted_class}")
+        show_spectrogram(mel_spectrogram)
 
 
-# Test an audio file
-test_audio_file = "test.wav"
-class_probabilities, predicted_class_index = test_audio(test_audio_file, model)
+# Função para exibir o espectrograma
+def show_spectrogram(mel_spectrogram):
+    global canvas
+    if canvas:
+        canvas.get_tk_widget().pack_forget()  # Remove o espectrograma anterior
 
-# Display results for all classes
-for i, class_label in enumerate(classes):
-    probability = class_probabilities[i]
-    print(f"Class: {class_label}, Probability: {probability:.4f}")
+    fig, ax = plt.subplots()
+    ax.imshow(mel_spectrogram.numpy().squeeze(), aspect="auto", origin="lower")
+    ax.set_title("Espectrograma Mel")
+    ax.set_xlabel("Tempo")
+    ax.set_ylabel("Frequência")
 
-# Calculate and display the predicted class and accuracy
-predicted_class = classes[predicted_class_index]
-accuracy = class_probabilities[predicted_class_index]
-print(f"The audio is classified as: {predicted_class}")
-print(f"Accuracy: {accuracy:.4f}")
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(pady=20)
+
+
+# Carregar o modelo salvo
+model = tf.keras.models.load_model("audio_classification_model.keras")
+
+# Definir as classes e a forma alvo
+classes = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+target_shape = (128, 128)
+
+# Criar a interface gráfica
+root = Tk()
+root.title("Numeric Digit Recognizer")
+
+canvas = None  # Inicializa a variável canvas
+
+select_button = Button(root, text="Selecionar arquivo .wav", command=select_file)
+select_button.pack(pady=20)
+
+result_label = Label(root, text="")
+result_label.pack(pady=20)
+
+root.mainloop()
