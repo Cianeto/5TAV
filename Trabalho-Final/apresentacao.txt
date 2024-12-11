@@ -1,31 +1,68 @@
+https://youtu.be/E8ZL7lILs30
+
 Meu tema? 
+
 No meu trabalho eu montei um modelo de reconhecimento de dígitos por voz.
 
 O que eu utilizei? 
-- Eu encontrei um dataset de 30 mil arquivos de áudio com duração de < 1 segundo, de pessoas diferentes pronunciando os dígitos.
 
-- Biblioteca Tensorflow para a construção do modelo e Librosa para o tratamento do dado de entrada.
+- Eu encontrei um dataset de 30 mil arquivos de áudio com duração de 1 segundo, de diferentes pessoas pronunciando os dígitos.
+
+- Biblioteca Tensorflow para a construção do modelo e seu funcionamento.
+
+- Biblioteca Librosa que é uma biblioteca Python especializada em análise de áudio e música, para processar o áudio à uma váriavel e converter ele para um espectrograma.
+
+- Biblioteca Skicit-Learn para dividir o dataset em dados de treinamento e dados de teste.
 
 Como tratei o dataset para o modelo? 
-Os arquivos de áudio são carregados usando a biblioteca librosa, na taxa de amostragem original.
 
-Para deixar o dataset mais digerível, os dados de entrada que são .wav são convertidos em espectogramas "Mel", que diferem-se do espectrograma comum por terem as frequências convertidas para a escala de "Mel", que é uma transformação logarítmica aplicada aos componentes do domínio da frequência, cuja ideia principal é representar os componentes do som, dando importância maior aos que mais sensibilizam o ouvido humano.
+Os arquivos de áudio são carregados a uma variável utilizando a biblioteca Librosa, na taxa de amostragem original, e para deixar o dataset mais digerível, os dados de entrada que são .wav são convertidos em espectrogramas "Mel", que diferem-se do espectrograma comum por terem as frequências convertidas para a escala "Mel", que é uma transformação logarítmica aplicada aos componentes do domínio da frequência, cuja ideia principal é representar os componentes do som, dando importância maior aos que mais sensibilizam o ouvido humano.
 
-Esse espectograma, por ser uma representação visual do arquivo de áudio, torna mais fácil a entrada na rede neural. O espectograma gerado é redimensionado para 128x128 pixels, que é a quantidade de neurônios de entrada.
+Esse espectograma, por ser uma representação visual do arquivo de áudio, torna mais fácil a entrada na rede neural. O espectrograma gerado é redimensionado para 128x128 pixels, que é a quantidade de neurônios de entrada.
 
 Como foi construído o modelo? 
 
 Foi utilizada uma rede neural convolucional (CNN), que é uma escolha comum para tarefas baseadas em imagens e espectrogramas.
 
-- Camada de Entrada com o tamanho dos espectogramas redimensionados
+Input Layer:
 
-- Duas camadas convolucionais com funções de ativação ReLU seguidas por camadas de max-pooling
+Define a camada de entrada com a forma dos dados de entrada (espectrogramas Mel redimensionados).
 
-- Uma camada de flatten para preparar os dados para as camadas totalmente conectadas.
+Primeira Camada Conv2D:
 
-- Uma camada densa oculta com ativação ReLU.
+Aplica 32 filtros de convolução 2D de tamanho 3x3.
+Extrai características locais dos espectrogramas.
+Usa a função de ativação ReLU para introduzir não-linearidade.
 
-- Uma camada de saída com tantos neurônios quanto há classes (no nosso caso, 10: 0 até 9) e uma função de ativação softmax para produzir probabilidades de classe.
+Primeira Camada MaxPooling2D:
+
+Reduz a dimensionalidade dos dados (downsampling) pela metade em cada dimensão.
+Ajuda a reduzir a complexidade computacional e a extrair características mais robustas.
+
+Segunda Camada Conv2D:
+
+Aplica 64 filtros de convolução 2D de tamanho 3x3.
+Extrai características mais complexas dos dados.
+Usa a função de ativação ReLU.
+
+Segunda Camada MaxPooling2D:
+
+Reduz ainda mais a dimensionalidade dos dados.
+
+Camada Flatten:
+
+Achata os dados em um vetor 1D.
+Prepara os dados para as camadas densas totalmente conectadas.
+
+Camada Dense (64 neurônios):
+
+Aplica uma camada totalmente conectada com 64 neurônios.
+Usa a função de ativação ReLU.
+
+Camada de Saída Dense:
+
+Aplica uma camada totalmente conectada com um neurônio para cada classe.
+Usa a função de ativação softmax para produzir probabilidades de classificação.
 
 Me abstive de entender a matemática por de trás desses conceitos.
 
@@ -34,5 +71,7 @@ Como foi feito o treino?
 O dataset foi dividido em 80% para o treino (reconfiguração dos pesos) e 20% para o teste(avaliação da acurácia), com o modelo iterando o dataset inteiro 50 vezes.
 
 Os testes realizados alcançaram uma acurácia de 100% trigésima sexta (36) iteração (cada iteração passando por 10000 áudios .wav).
+
+O modelo é salvo em um arquivo ".keras"
 
 Demonstração 
