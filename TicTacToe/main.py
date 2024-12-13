@@ -1,3 +1,4 @@
+import json
 import matplotlib.pyplot as plt
 import csv
 from random import choice
@@ -34,6 +35,7 @@ class Player:
             self.move_database = []
             self.win_flag = 0
             self.draw_flag = 0
+            # self.load_move_database()  # <~~ OPCIONAL (COMENTAR PARA DESATIVAR)
 
     def move(self):  # <~~ DEFINE QUAL ESTRATÉGIA ESSE PLAYER APLICARÁ
         play = {1: self.random_move, 2: self.perfect_move, 3: self.intelligent_move}
@@ -280,6 +282,14 @@ class Player:
         if b[0] == 9:
             fill(p)
 
+    def save_move_database(self, filename="model.json"):
+        with open(filename, "w") as file:
+            json.dump(self.move_database, file)
+
+    def load_move_database(self, filename="model.json"):
+        with open(filename, "r") as file:
+            self.move_database = json.load(file)
+
     def intelligent_move(self, p):  # <~~ ESTRATÉGIA DO PLAYER INTELIGENTE
         # [10] = última posição jogada
         # [11] = núm. de jogos
@@ -317,6 +327,7 @@ class Player:
             self.random_moves = []
             self.ranked_moves = []
 
+        # JOGADA INTELIGENTE CASO ENCONTRE JOGADA POSSÍVEL COM PONTUAÇÃO SUFICIENTE NA BASE DE DADOS
         possible_move_exists = [
             move + [index]
             for index, move in enumerate(self.move_database)
@@ -399,14 +410,21 @@ class Game:
             print(board + "\n")
 
     def write_log(self):
-        with open("TicTacToe/log.csv", "a") as log_file:
+        with open("log.csv", "a") as log_file:
             elements = self.board[11:15]
             csv_line = ",".join(map(str, elements))
             log_file.write(f"{csv_line}\n")
 
     def reset_log(self):
-        with open("TicTacToe/log.csv", "w") as log_file:
+        with open("log.csv", "w") as log_file:
             log_file.write("rounds,p1,p2,draws\n")
+
+    def save_model(self):
+        if self.p1.player_type == 3:
+            self.p1.save_move_database()
+
+        elif self.p2.player_type == 3:
+            self.p2.save_move_database()
 
     def draw_graph(self):
         rounds = []
@@ -414,7 +432,7 @@ class Game:
         p2 = []
         draws = []
 
-        with open("TicTacToe/log.csv", "r") as file:
+        with open("log.csv", "r") as file:
             reader = csv.DictReader(file)
             for row in reader:
                 rounds.append(int(row["rounds"]))
@@ -540,7 +558,7 @@ class Game:
             print(
                 f"\nP1 -> {self.board[12]} ({self.board[12]/self.total_rounds*100:.2f}%)\nP2 -> {self.board[13]} ({self.board[13]/self.total_rounds*100:.2f}%)\nEMPATES -> {self.board[14]} ({self.board[14]/self.total_rounds*100:.2f}%)\n"
             )
-
+            # self.save_model()  # <~~ OPCIONAL (COMENTAR PARA DESATIVAR)
             self.reset_all()
             self.draw_graph()
 
