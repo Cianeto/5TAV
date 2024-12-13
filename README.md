@@ -42,7 +42,7 @@ Se a partida ainda estiver em andamento, o jogador inteligente itera pelo `moves
 
 Caso não encontre uma jogada aplicável, realiza-se uma jogada aleatória, que é salva em um array temporário, para posterior inclusão no `moves_database[]` caso o jogador inteligente vença essa rodada.
 
-Ajustando o sistema de recompensas e punições, os valores ideais encontrados foram (+1 vitória), (-10 derrota) e (-1 empate), para que o jogador adversário vença menos. No entanto, acredita-se que essa configuração possa resultar em mais empates. Esses valores não foram modificados extensivamente, ficando a critério do usuário do código encontrar valores mais adequados.
+Ajustando o sistema de recompensas e punições, os valores ideais encontrados foram (+1 vitória), (-10 derrota) e (-1 empate), para que o jogador adversário vença menos. No entanto, acredito que essa configuração possa resultar em mais empates. Esses valores não foram modificados extensivamente, ficando a critério do usuário do código encontrar valores mais adequados.
 
 #### Análise de Desempenho do Jogador Inteligente
 
